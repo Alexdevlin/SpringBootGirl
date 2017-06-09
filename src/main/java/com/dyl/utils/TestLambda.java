@@ -5,9 +5,15 @@ import sun.jvm.hotspot.tools.SysPropsDumper;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.time.DayOfWeek;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by duyunlei on 09/06/2017.
@@ -80,5 +86,49 @@ public class TestLambda {
                 .filter((s) -> s.endsWith("2"))
                 .forEach(System.out::println);
     }
+    public  static  void testDate(){
+//        LocalDateTime 同时表示了时间和日期，相当于前两节内容合并到一个对象上了。LocalDateTime和LocalTime还有LocalDate一样，都是不可变的。LocalDateTime提供了一些能访问具体字段的方法。
 
+        LocalDateTime sylvester = LocalDateTime.of(2014, Month.DECEMBER, 31, 23, 59, 59);
+        DayOfWeek dayOfWeek = sylvester.getDayOfWeek();
+        System.out.println(dayOfWeek);      // WEDNESDAY
+        Month month = sylvester.getMonth();
+        System.out.println(month);          // DECEMBER
+        long minuteOfDay = sylvester.getLong(ChronoField.MINUTE_OF_DAY);
+        System.out.println(minuteOfDay);    // 1439
+    }
+
+    public static void streamList() {
+
+//        前面提到过Stream有串行和并行两种，串行Stream上的操作是在一个线程中依次完成，而并行Stream则是在多个线程上同时执行。
+//        下面的例子展示了是如何通过并行Stream来提升性能：
+//        首先我们创建一个没有重复元素的大表：
+
+        int max = 1000000;
+        List<String> values = new ArrayList<>(max);
+        for (int i = 0; i < max; i++) {
+            UUID uuid = UUID.randomUUID();
+            values.add(uuid.toString());
+        }
+//        然后我们计算一下排序这个Stream要耗时多久，
+//        串行排序：
+
+        long t0 = System.nanoTime();
+        long count = values.stream().sorted().count();
+        System.out.println(count);
+        long t1 = System.nanoTime();
+        long millis = TimeUnit.NANOSECONDS.toMillis(t1 - t0);
+        System.out.println(String.format("sequential sort took: %d ms", millis));
+// 串行耗时: 899 ms
+//        并行排序：
+
+        long t0 = System.nanoTime();
+        long count = values.parallelStream().sorted().count();
+        System.out.println(count);
+        long t1 = System.nanoTime();
+        long millis = TimeUnit.NANOSECONDS.toMillis(t1 - t0);
+        System.out.println(String.format("parallel sort took: %d ms", millis));
+// 并行排序耗时: 472 ms
+//        上面两个代码几乎是一样的，但是并行版的快了50%之多，唯一需要做的改动就是将stream()改为parallelStream()。
+    }
 }
